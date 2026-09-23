@@ -1,5 +1,6 @@
 (ns uml-viewer.application.detail
-  (:require [uml-viewer.engine.hit :as hit]
+  (:require [clojure.string :as str]
+            [uml-viewer.engine.hit :as hit]
             [uml-viewer.engine.layout :as layout]
             [uml-viewer.application.overlay :as overlay]))
 
@@ -32,6 +33,30 @@
   (let [[out in] (get rel-phrases kind ["to" "from"])]
     (if outgoing? out in)))
 
+(defn- id-tail [id k]
+  (let [segs (str/split (name id) #"\.")]
+    (str/join "." (take-last (min k (count segs)) segs))))
+
+(defn distinct-names
+  "Rel maps with `:name` unchanged when it is unique among the distinct
+  other classes, else the shortest dotted tail of the id that tells the
+  colliding ones apart (`chat.routes` vs `files.routes`)."
+  [rels]
+  (let [ids (distinct (map :id rels))
+        base (into {} (map (juxt :id :name) rels))]
+    (loop [k 1 labels base]
+      (let [clashes (->> ids
+                         (group-by labels)
+                         vals
+                         (filter #(> (count %) 1))
+                         (apply concat)
+                         set)]
+        (if (or (empty? clashes)
+                (every? #(<= (count (str/split (name %) #"\.")) k) clashes))
+          (mapv #(assoc % :name (labels (:id %))) rels)
+          (recur (inc k)
+                 (reduce (fn [m id] (assoc m id (id-tail id (inc k)))) labels clashes)))))))
+
 (defn model
   "Class card for the detail window, or nil if `id` is unknown."
   [scene id]
@@ -40,17 +65,18 @@
      :ns (overlay/class-namespace c)
      :package (hit/package-by-id scene (:package c))
      :title (get-in scene [:diagram :title])
-     :rels (mapv (fn [e]
-                   (let [out? (= id (:from e))
-                         oid (if out? (:to e) (:from e))
-                         other (hit/class-by-id scene oid)]
-                     {:id oid
-                      :name (or (:name other) (name oid))
-                      :kind (:kind e)
-                      :label (:label e)
-                      :outgoing? out?
-                      :phrase (rel-phrase (:kind e) out?)}))
-                 (hit/connected-edges scene id))}))
+     :rels (distinct-names
+             (mapv (fn [e]
+                     (let [out? (= id (:from e))
+                           oid (if out? (:to e) (:from e))
+                           other (hit/class-by-id scene oid)]
+                       {:id oid
+                        :name (or (:name other) (name oid))
+                        :kind (:kind e)
+                        :label (:label e)
+                        :outgoing? out?
+                        :phrase (rel-phrase (:kind e) out?)}))
+                   (hit/connected-edges scene id)))}))
 
 (defn column-layout
   "Columns from the right edge. Each has :left and :right."
