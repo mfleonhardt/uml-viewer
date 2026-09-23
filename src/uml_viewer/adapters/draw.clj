@@ -742,8 +742,9 @@
              hover? gold
              (:private row) muted
              :else (detail-row-color row)))
-      (q/text (:text row) x y
-              (max 0 (- name-right x)) (:h row)))))
+      (let [w (max 0 (- name-right x))]
+        (q/text (layout/fit-tail (:text row) w q/text-width) x y
+                w (:h row))))))
 
 (defn- draw-detail-row [row hover?]
   (when hover? (draw-hover-wash row))

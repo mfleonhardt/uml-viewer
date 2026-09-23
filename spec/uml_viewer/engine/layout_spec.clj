@@ -6,6 +6,21 @@
             [uml-viewer.engine.layout :as layout]
             [uml-viewer.engine.route :as route]))
 
+(describe "fit-tail"
+  (it "leaves text that fits alone"
+    (should= "+ lifespan" (layout/fit-tail "+ lifespan" 20 count)))
+
+  (it "keeps the marker and the tail of a long dotted name"
+    (let [s (layout/fit-tail "+ _check_token_or_raise._is_local" 20 count)]
+      (should= "+ …r_raise._is_local" s)
+      (should (<= (count s) 20))))
+
+  (it "works without a marker"
+    (should= "…ain.run" (layout/fit-tail "a.b.main.run" 8 count)))
+
+  (it "falls back to the marker and an ellipsis when nothing fits"
+    (should= "- …" (layout/fit-tail "- abcdef" 2 count))))
+
 (describe "formatters"
   (it "formats coverage, mutants, and crap"
     (should= "90%" (layout/format-coverage 0.9))

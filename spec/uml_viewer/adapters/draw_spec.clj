@@ -31,6 +31,7 @@
                   q/text-align (rec :text-align)
                   q/text-size (rec :text-size)
                   q/text-font (rec :text-font)
+                  q/text-width (fn [s] (* 7 (count (str s))))
                   q/create-font (fn [& _] :font)
                   q/triangle (rec :triangle)
                   q/quad (rec :quad)
