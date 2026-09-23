@@ -188,4 +188,20 @@
   (it "keeps the metric table when any op has a metric"
     (let [rows (detail/rows (detail/model (scene) :a))]
       (should (some #(= :col-header (:kind %)) rows))
-      (should-not (some #(= :op (:kind %)) rows)))))
+      (should-not (some #(= :op (:kind %)) rows))))
+
+  (it "keeps unique relationship names and lengthens only the ones that collide"
+    (let [rels [{:id :app.chat.routes :name "routes"}
+                {:id :app.files.routes :name "routes"}
+                {:id :app.files.routes :name "routes"}
+                {:id :app.csrf :name "Csrf"}
+                {:id :x.admin.v1.routes :name "routes"}
+                {:id :y.admin.v1.routes :name "routes"}]
+          names (mapv :name (detail/distinct-names rels))]
+      (should= ["chat.routes" "files.routes" "files.routes" "Csrf"
+                "x.admin.v1.routes" "y.admin.v1.routes"]
+               names)))
+
+  (it "leaves a card with no collisions alone"
+    (let [model (detail/model (scene) :a)]
+      (should= ["B"] (mapv :name (:rels model))))))
