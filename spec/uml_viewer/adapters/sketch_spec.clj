@@ -714,6 +714,16 @@
       (should (re-find (re-pattern (str "cursor color of grokTab to \\{" gr ", " gg ", " gb "\\}"))
                        script))))
 
+  (it "picks the companion from UML_VIEWER_AGENT: claude, else grok"
+    (let [claude (sketch/agent-command "claude")
+          grok (sketch/agent-command nil)]
+      (should= ["--append-system-prompt" sketch/standing-rules sketch/launch-prompt]
+               (rest claude))
+      (should-not (some #{"--yolo" "--dangerously-skip-permissions"} claude))
+      (should (some #{"--yolo"} grok))
+      (should (some #{"--rules"} grok))
+      (should= grok (sketch/agent-command "grok"))))
+
   (it "closes only this viewer's Terminal window by id"
     (let [script (sketch/close-terminal-script "42")]
       (should (re-find #"exists process \"Terminal\"" script))

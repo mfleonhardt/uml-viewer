@@ -157,15 +157,27 @@
   (let [[r g b] (rgb-16 c)]
     (str "{" r ", " g ", " b "}")))
 
+(defn agent-command
+  "Companion argv. UML_VIEWER_AGENT=claude runs Claude Code (CLAUDE_BIN to
+  override) with no skip-permissions flag, so it uses the user's configured
+  permission mode; otherwise Grok."
+  ([] (agent-command (System/getenv "UML_VIEWER_AGENT")))
+  ([agent]
+   (if (= "claude" agent)
+     [(or (System/getenv "CLAUDE_BIN") "claude")
+      "--append-system-prompt" standing-rules
+      launch-prompt]
+     [(grok-executable) "--yolo" "--trust" "--rules" standing-rules
+      launch-prompt])))
+
 (defn new-session-args
   ([cwd] (new-session-args cwd (session-id cwd)))
   ([cwd session]
-   ["new-session" "-d" "-s" session "-c" cwd
-    "-e" "GROK_THEME=terminal"
-    "-e" "GROK_TERMINAL_THEME=1"
-    "-e" "COLORTERM=truecolor"
-    (grok-executable) "--yolo" "--trust" "--rules" standing-rules
-    launch-prompt]))
+   (into ["new-session" "-d" "-s" session "-c" cwd
+          "-e" "GROK_THEME=terminal"
+          "-e" "GROK_TERMINAL_THEME=1"
+          "-e" "COLORTERM=truecolor"]
+         (agent-command))))
 
 (defn kill-session-args
   ([] (kill-session-args (current-session)))
