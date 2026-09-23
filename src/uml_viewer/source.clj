@@ -22,6 +22,28 @@
   [lang]
   (get @languages lang))
 
+(defn- owner [impls ident]
+  (first (filter #(locate % ident) impls)))
+
+(defrecord FirstLocated [impls]
+  LanguageSource
+  (locate [_ ident]
+    (some #(locate % ident) impls))
+  (extract [_ source ident]
+    (when-let [impl (owner impls ident)]
+      (extract impl source ident)))
+  (start-line [_ source ident]
+    (when-let [impl (owner impls ident)]
+      (start-line impl source ident)))
+  (title [_ ident]
+    (title (or (owner impls ident) (first impls)) ident)))
+
+(defn first-located
+  "One `LanguageSource` over `impls`: each call goes to the first impl
+  that can locate the ident's file. Lets one viewer open any language."
+  [& impls]
+  (->FirstLocated (vec impls)))
+
 (defn- from-impl [impl ident lang]
   (when impl
     (when-let [path (locate impl ident)]

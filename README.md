@@ -420,12 +420,27 @@ with `(graph/register! :java my-java-scanner)`. The scanner must satisfy
 Classes are `{:id :name :ns :stereotype}`. Edges are `{:from :to :kind}`
 (`:dependency` or `:implements`). The policy layer is language-neutral.
 
-**Clojure** (`uml-viewer.clojure-language.graph-clojure`) is the only
-implementation today: it reads `ns` forms (including prefix lists),
-`requiring-resolve` of a quoted var (including nested calls), `defprotocol`,
-`defrecord`, and `deftype`. Java or C need a different parser; do not
-special-case languages in `policy` or `ir-generator`. Main constructs the
-implementation and passes it in.
+**Clojure** (`uml-viewer.clojure-language.graph-clojure`) reads `ns` forms
+(including prefix lists), `requiring-resolve` of a quoted var (including
+nested calls), `defprotocol`, `defrecord`, and `deftype`.
+
+**Python** (`uml-viewer.python-language.graph-python`, `:lang :python`)
+pipes `scan_python.py` to `python3` (override with `UML_VIEWER_PYTHON`). It
+uses stdlib `ast`, so nothing is imported or run. One class per module
+(`__init__.py` is its package). Absolute, relative, lazy, and
+`TYPE_CHECKING` imports of project modules are `:dependency`. A bare import
+that does not resolve at the root is tried against the importer's own
+folder (Lambda-style code). A `typing.Protocol` makes the module
+`:interface`; an ABC or `@abstractmethod` makes it `:abstract`. Subclassing
+a class from such a module is `:implements`, from any other project module
+`:inheritance`. Stdlib imports drop; other externals are foreign. Use
+`:prefix ""` when top-level packages share no prefix, and name dotted
+segments in `:levels` (`[[app.core] [app.services] …]`).
+
+Do not special-case languages in `policy` or `ir-generator`. Main picks the
+registered implementation for the policy's `:lang` and passes it in. The
+viewer opens source through `source/first-located`, which tries each
+`LanguageSource` until one finds the file.
 
 ## IR
 

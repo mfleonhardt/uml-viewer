@@ -7,6 +7,7 @@
   [:application.document :domain.hierarchy] :association,
   [:main.ir-generator :clojure-language.graph-clojure] :association,
   [:application.document :engine.compose] :association,
+  [:main :python-language] :association,
   [:engine.compose :engine.layout] :association,
   [:engine.compose :engine.route] :association,
   [:adapters.core :adapters.sketch] :association,
@@ -14,20 +15,32 @@
   [:main.uml-viewer :clojure-language.source-clojure] :association,
   [:main :clojure-language] :association,
   [:main.ir-generator :application.ir-generator] :association,
-  [:main :adapters] :association},
+  [:main.uml-viewer :python-language.source-python] :association,
+  [:main :adapters] :association,
+  [:main.ir-generator :python-language.graph-python] :association},
  :omit-edges [],
  :levels
- [[:domain :source :graph :clojure-language]
+ [[:domain :source :graph :clojure-language :python-language]
   [:engine]
   [:application]
   [:adapters]
   [:main]],
  :policy-file "examples/uml-viewer.policy.edn",
- :order [:main :adapters :application :engine :source :graph :clojure-language :domain],
+ :order
+ [:main
+  :adapters
+  :application
+  :engine
+  :source
+  :graph
+  :clojure-language
+  :python-language
+  :domain],
  :omit [],
  :edges
  [{:from :main.uml-viewer, :to :adapters.core, :kind :dependency}
   {:from :clojure-language.source-clojure, :to :source, :kind :implements}
+  {:from :main.uml-viewer, :to :source, :kind :dependency}
   {:from :adapters.draw, :to :application.document, :kind :dependency}
   {:from :application.document, :to :domain.hierarchy, :kind :dependency}
   {:from :application.events, :to :domain.policy, :kind :dependency}
@@ -38,6 +51,7 @@
   {:from :main.ir-generator, :to :clojure-language.graph-clojure, :kind :dependency}
   {:from :application.detail, :to :application.overlay, :kind :dependency}
   {:from :engine.layout, :to :domain.geom, :kind :dependency}
+  {:from :python-language.graph-python, :to :graph, :kind :implements}
   {:from :adapters.sketch, :to :application.events, :kind :dependency}
   {:from :application.document, :to :engine.compose, :kind :dependency}
   {:from :application.document, :to :domain.ir, :kind :dependency}
@@ -54,6 +68,7 @@
   {:from :clojure-language.graph-clojure, :to :graph, :kind :implements}
   {:from :adapters.draw, :to :domain.geom, :kind :dependency}
   {:from :application.events, :to :domain.hierarchy, :kind :dependency}
+  {:from :main.ir-generator, :to :graph, :kind :dependency}
   {:from :engine.compose, :to :engine.layout, :kind :dependency}
   {:from :engine.compose, :to :engine.route, :kind :dependency}
   {:from :application.events, :to :engine.layout, :kind :dependency}
@@ -75,6 +90,7 @@
   {:from :adapters.draw, :to :domain.config, :kind :dependency}
   {:from :main.uml-viewer, :to :clojure-language.source-clojure, :kind :dependency}
   {:from :engine.curve, :to :domain.geom, :kind :dependency}
+  {:from :python-language.source-python, :to :source, :kind :implements}
   {:from :engine.layout, :to :domain.config, :kind :dependency}
   {:from :engine.compose, :to :engine.curve, :kind :dependency}
   {:from :adapters.draw, :to :engine.layout, :kind :dependency}
@@ -82,7 +98,9 @@
   {:from :application.overlay, :to :domain.ir, :kind :dependency}
   {:from :main.ir-generator, :to :application.ir-generator, :kind :dependency}
   {:from :adapters.sketch, :to :domain.policy, :kind :dependency}
+  {:from :main.uml-viewer, :to :python-language.source-python, :kind :dependency}
   {:from :adapters.sketch, :to :application.detail, :kind :dependency}
+  {:from :main.ir-generator, :to :python-language.graph-python, :kind :dependency}
   {:from :adapters.sketch, :to :application.document, :kind :dependency}
   {:from :application.events, :to :application.overlay, :kind :dependency}
   {:from :application.events, :to :engine.hit, :kind :dependency}
@@ -207,6 +225,16 @@
    :ns "uml-viewer.main.uml-viewer",
    :stereotype nil,
    :level 4}
+  {:id :python-language.graph-python,
+   :name "GraphPython",
+   :ns "uml-viewer.python-language.graph-python",
+   :stereotype nil,
+   :level 0}
+  {:id :python-language.source-python,
+   :name "SourcePython",
+   :ns "uml-viewer.python-language.source-python",
+   :stereotype nil,
+   :level 0}
   {:id :source,
    :name "Source",
    :ns "uml-viewer.source",
