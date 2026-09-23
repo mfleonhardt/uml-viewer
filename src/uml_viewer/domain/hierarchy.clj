@@ -189,7 +189,8 @@
             to-here? (boolean (and to-in (ids to-in)))]
         (cond
           (and from-here? to-here? (not= from to-in))
-          (update acc :internal conj (assoc e :from from :to to-in))
+          (update acc :internal conj (assoc e :from from :to to-in
+                                              :orig-from (:from e) :orig-to (:to e)))
 
           (and from-here? (:foreign to-ext))
           (add-foreign acc from to-ext e)
@@ -206,6 +207,26 @@
           :else acc)))
     {:internal [] :in {} :out {} :foreign [] :foreign-edges []}
     edges))
+
+(defn- leaf-dep [e]
+  {:from (or (:orig-from e) (:from e))
+   :to (or (:orig-to e) (:to e))
+   :violating (boolean (:violating e))})
+
+(defn- with-leaf-deps
+  "Give each merged box-to-box edge the leaf `from -> to` pairs it stands
+  for (`:deps`), so hovering it names the modules, not just the boxes."
+  [merged lifted]
+  (let [by-pair (group-by (juxt :from :to) lifted)]
+    (mapv (fn [e]
+            (let [leaves (->> (get by-pair [(:from e) (:to e)])
+                              (filter :orig-from)
+                              (mapv leaf-dep)
+                              distinct
+                              vec)]
+              (cond-> (dissoc e :orig-from :orig-to)
+                (seq leaves) (assoc :deps leaves))))
+          merged)))
 
 (defn view-at
   "One diagram: children of `path` as boxes, edges collapsed to that level."
@@ -227,10 +248,10 @@
         foreign (:foreign parts)
         foreign-ids (set (map :id foreign))
         visible (into ids foreign-ids)
+        all-edges (into (:internal parts) (:foreign-edges parts))
         edges (filterv #(and (visible (:from %)) (visible (:to %)))
                        (policy/apply-edge-kinds
-                         (policy/merge-edges
-                           (into (:internal parts) (:foreign-edges parts)))
+                         (with-leaf-deps (policy/merge-edges all-edges) all-edges)
                          kinds omit))
         boxes (mapv (fn [c]
                       (cond-> c
@@ -274,11 +295,6 @@
             (:id p)))
         (:packages view)))
 
-(defn- leaf-dep [e]
-  {:from (or (:orig-from e) (:from e))
-   :to (or (:orig-to e) (:to e))
-   :violating (boolean (:violating e))})
-
 (defn- merge-direction-edges [edges]
   (->> edges
        (group-by (juxt :from :to))
@@ -293,7 +309,7 @@
                                              [(:from e) (:to e)
                                               (:orig-from e) (:orig-to e)])
                                            es))
-                     deps (mapv leaf-dep es)]
+                     deps (vec (distinct (mapcat #(or (seq (:deps %)) [(leaf-dep %)]) es)))]
                  (cond-> (assoc (dissoc best :violating :orig-from :orig-to)
                            :via-ids (disj via nil)
                            :deps deps)
