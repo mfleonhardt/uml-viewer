@@ -437,6 +437,21 @@ a class from such a module is `:implements`, from any other project module
 `:prefix ""` when top-level packages share no prefix, and name dotted
 segments in `:levels` (`[[app.core] [app.services] …]`).
 
+**CDK** (`uml-viewer.cdk-language.graph-cdk`, `:lang :cdk`) draws a
+deployment diagram from `cdk synth` output: `:src` is a folder of
+`*.template.json` (any depth, so several CDK apps can be combined). It never
+runs CDK or talks to AWS. The tree is the construct path (stack →
+constructs → resource); each resource is a class with its CloudFormation type
+as the stereotype. Edges come from Ref/GetAtt/Sub, from SSM parameters that
+one stack writes and another reads, and from IAM statements (refs, exact SSM
+ARNs, and typed ARN globs such as `table/app-*`). SSM parameters and IAM
+policies are folded into edges, not drawn. Each box's `:fields` are review
+facts (encryption, PITR, public access, retention, trust principals, env var
+names, DeletionPolicy); a role's `:ops` are its permissions, one row per
+target, with `!!` on broad grants. Env var, secret, and condition values are
+never copied. Put stacks in `:levels` in deploy order (first deployed
+innermost) so a red arrow means a dependency on a later stack.
+
 Do not special-case languages in `policy` or `ir-generator`. Main picks the
 registered implementation for the policy's `:lang` and passes it in. The
 viewer opens source through `source/first-located`, which tries each

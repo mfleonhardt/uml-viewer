@@ -10,6 +10,7 @@
   [:main :python-language] :association,
   [:engine.compose :engine.layout] :association,
   [:engine.compose :engine.route] :association,
+  [:main.ir-generator :cdk-language.graph-cdk] :association,
   [:adapters.core :adapters.sketch] :association,
   [:main :application] :association,
   [:main.uml-viewer :clojure-language.source-clojure] :association,
@@ -20,7 +21,7 @@
   [:main.ir-generator :python-language.graph-python] :association},
  :omit-edges [],
  :levels
- [[:domain :source :graph :clojure-language :python-language]
+ [[:domain :source :graph :clojure-language :python-language :cdk-language]
   [:engine]
   [:application]
   [:adapters]
@@ -35,6 +36,7 @@
   :graph
   :clojure-language
   :python-language
+  :cdk-language
   :domain],
  :omit [],
  :edges
@@ -59,6 +61,7 @@
   {:from :adapters.draw, :to :quil, :kind :dependency}
   {:from :main.uml-viewer, :to :domain.log, :kind :dependency}
   {:from :adapters.draw, :to :engine.curve, :kind :dependency}
+  {:from :cdk-language.graph-cdk, :to :graph, :kind :implements}
   {:from :application.events, :to :application.detail, :kind :dependency}
   {:from :adapters.source-window, :to :source, :kind :dependency}
   {:from :domain.hierarchy, :to :domain.config, :kind :dependency}
@@ -72,6 +75,7 @@
   {:from :engine.compose, :to :engine.layout, :kind :dependency}
   {:from :engine.compose, :to :engine.route, :kind :dependency}
   {:from :application.events, :to :engine.layout, :kind :dependency}
+  {:from :main.ir-generator, :to :cdk-language.graph-cdk, :kind :dependency}
   {:from :adapters.sketch, :to :quil, :kind :dependency}
   {:from :engine.compose, :to :domain.geom, :kind :dependency}
   {:from :engine.route, :to :engine.layout, :kind :dependency}
@@ -156,6 +160,11 @@
    :ns "uml-viewer.application.overlay",
    :stereotype nil,
    :level 2}
+  {:id :cdk-language.graph-cdk,
+   :name "GraphCdk",
+   :ns "uml-viewer.cdk-language.graph-cdk",
+   :stereotype nil,
+   :level 0}
   {:id :clojure-language.graph-clojure,
    :name "GraphClojure",
    :ns "uml-viewer.clojure-language.graph-clojure",
