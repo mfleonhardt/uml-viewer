@@ -261,6 +261,24 @@
       (should= 0 (:level (box view :layout)))))
 
 (describe "hierarchy"
+  (it "keeps the leaf pairs behind a top-level arrow so hovering names the modules"
+    (let [g {:classes [{:id :app.a :name "A"} {:id :app.b :name "B"}
+                       {:id :core.x :name "X"} {:id :core.y :name "Y"}]
+             :edges [{:from :core.x :to :app.a :kind :dependency}
+                     {:from :core.y :to :app.b :kind :dependency}
+                     {:from :app.a :to :core.x :kind :dependency}]}
+          p {:hierarchical true :order [:app :core] :levels [[:core] [:app]]}
+          view (hierarchy/view-at (policy/apply-policy p g) [])
+          up (first (filter #(and (= :core (:from %)) (= :app (:to %))) (:edges view)))
+          down (first (filter #(and (= :app (:from %)) (= :core (:to %))) (:edges view)))]
+      (should (:violating up))
+      (should= #{[:core.x :app.a true] [:core.y :app.b true]}
+               (set (map (juxt :from :to :violating) (:deps up))))
+      (should= [[:app.a :core.x false]] (mapv (juxt :from :to :violating) (:deps down)))
+      (let [bundled (hierarchy/collapse-arrows view)
+            up2 (first (filter #(and (= :core (:from %)) (= :app (:to %))) (:edges bundled)))]
+        (should= 2 (count (:deps up2))))))
+
   (it "collapses a violating leaf dependency onto the parent segments"
     (let [g (update graph :edges conj {:from :ir :to :layout :kind :dependency})
           p (assoc policy :levels [[:ir] [:layout]])
