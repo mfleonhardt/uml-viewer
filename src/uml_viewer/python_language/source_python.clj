@@ -23,12 +23,24 @@
 (defn- indent-of [line]
   (count (re-find #"^[ \t]*" line)))
 
+(defn- header-end
+  "Index just past the header line that closes a def/class starting at
+  `start`: the first line ending in `:` (a multi-line signature's `):` line
+  is part of the header, not the end of the block)."
+  [source start]
+  (loop [pos start]
+    (let [eol (or (str/index-of source "\n" pos) (count source))
+          line (str/trimr (str/replace (subs source pos eol) #"\s+#.*$" ""))]
+      (if (or (str/ends-with? line ":") (>= eol (count source)))
+        (min (count source) (inc eol))
+        (recur (inc eol))))))
+
 (defn- block-end
   "Index just past the block whose header starts at `start` with `indent`:
-  the first later non-blank line indented no deeper, or the end."
+  the first non-blank line after the header indented no deeper, or the end."
   [source start indent]
-  (let [nl (str/index-of source "\n" start)]
-    (loop [pos (if nl (inc nl) (count source))]
+  (let [body (header-end source start)]
+    (loop [pos body]
       (if (>= pos (count source))
         (count source)
         (let [eol (or (str/index-of source "\n" pos) (count source))

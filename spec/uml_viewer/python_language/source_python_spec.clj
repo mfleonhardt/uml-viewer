@@ -59,7 +59,22 @@
       (should= 10 (py-source/member-line src "outer.inner"))
       (should-be-nil (py-source/member-line src "C.go"))
       (should-be-nil (py-source/member-line src "B.stop"))
-      (should-be-nil (py-source/member-line src "A.inner")))))
+      (should-be-nil (py-source/member-line src "A.inner"))))
+
+  (it "finds a def nested in a function with a multi-line signature"
+    (let [src (str "def make_tool(\n"
+                   "    session_id: str,\n"
+                   "):  # factory\n"
+                   "    @tool\n"
+                   "    def run(x):\n"
+                   "        return x\n"
+                   "    return run\n"
+                   "\n"
+                   "def other():\n"
+                   "    def run():\n"
+                   "        pass\n")]
+      (should= 5 (py-source/member-line src "make_tool.run"))
+      (should= 10 (py-source/member-line src "other.run")))))
 
 (describe "first-located source"
   (it "sends each ident to the language that can find its file"
