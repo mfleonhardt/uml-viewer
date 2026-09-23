@@ -437,6 +437,24 @@ a class from such a module is `:implements`, from any other project module
 `:prefix ""` when top-level packages share no prefix, and name dotted
 segments in `:levels` (`[[app.core] [app.services] …]`).
 
+**Python CRAP.** `crap_python.py` writes `.metrics/crap.edn` from a
+coverage.py JSON report plus McCabe complexity computed with `ast`. Entry
+`:namespace` is the module (the class `:ns`), `:name` the dotted qualname
+(`Class.method`). Each function's coverage is its own body's statements;
+nested defs are separate entries. From the examined project:
+
+```bash
+COVERAGE_FILE=/tmp/cov/.coverage python -m pytest tests/ -p no:cacheprovider \
+  --cov=src --cov-report=json:/tmp/cov/coverage.json --cov-report=
+python3 path/to/uml_viewer/python_language/crap_python.py \
+  /tmp/cov/coverage.json src .metrics/crap.edn
+```
+
+Keeping `COVERAGE_FILE` and the JSON outside the repo avoids stray files.
+If the suite might touch AWS without a mock, run it with fake credentials
+(`AWS_ACCESS_KEY_ID=testing …`, `AWS_SHARED_CREDENTIALS_FILE=/dev/null`,
+`AWS_CONFIG_FILE=/dev/null`) so nothing reaches a real account.
+
 **CDK** (`uml-viewer.cdk-language.graph-cdk`, `:lang :cdk`) draws a
 deployment diagram from `cdk synth` output: `:src` is a folder of
 `*.template.json` (any depth, so several CDK apps can be combined). It never

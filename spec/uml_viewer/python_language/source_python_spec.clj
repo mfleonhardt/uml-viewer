@@ -40,7 +40,26 @@
   (it "finds the 1-based line of a member"
     (should= 3 (py-source/member-line sample "Store"))
     (should= 10 (py-source/member-line sample "run"))
-    (should-be-nil (py-source/member-line sample "missing"))))
+    (should-be-nil (py-source/member-line sample "missing")))
+
+  (it "resolves a dotted qualname inside its class, not the first match"
+    (let [src (str "class A:\n"
+                   "    def go(self):\n"
+                   "        return 'a'\n\n"
+                   "class B:\n"
+                   "    def go(self):\n"
+                   "        return 'b'\n\n"
+                   "def outer():\n"
+                   "    def inner():\n"
+                   "        return 1\n"
+                   "    return inner\n")]
+      (should= 2 (py-source/member-line src "A.go"))
+      (should= 6 (py-source/member-line src "B.go"))
+      (should= "    def go(self):\n        return 'b'" (py-source/extract-member src "B.go"))
+      (should= 10 (py-source/member-line src "outer.inner"))
+      (should-be-nil (py-source/member-line src "C.go"))
+      (should-be-nil (py-source/member-line src "B.stop"))
+      (should-be-nil (py-source/member-line src "A.inner")))))
 
 (describe "first-located source"
   (it "sends each ident to the language that can find its file"
