@@ -470,6 +470,38 @@ target, with `!!` on broad grants. Env var, secret, and condition values are
 never copied. Put stacks in `:levels` in deploy order (first deployed
 innermost) so a red arrow means a dependency on a later stack.
 
+**Angular** (`uml-viewer.angular-language.graph-angular`, `:lang :angular`)
+pipes `scan_angular.js` to `node`, which parses every `.ts` under `:src`
+(specs and `.d.ts` skipped) with the project's own `node_modules/typescript`
+(or `UML_VIEWER_TYPESCRIPT`); nothing is compiled or run. One class per file,
+nested by folder, named without its Angular suffix (`chat-input`, not
+`chat-input.component`) unless two files in a folder would clash. `:ns` is
+the file path, so the source window opens it. Stereotypes come from
+`@Component` (`page` for `*.page.ts`), `@Injectable` (service), `@Pipe`,
+`@Directive`, typed consts (guard, interceptor, resolver, routes, config), and
+type-only files (interface). Static imports and lazy `import()` routes are
+dependencies; `extends` is inheritance. Packages become foreign ids
+(`@angular/core` → `angular.core`); list only the ones worth an oval in
+`:foreign`, since unlisted ones drop. Fields show a component's selector,
+inputs, and outputs, and every file's HTTP calls (`GET {apiUrl}/files`),
+following `this.x` members and local consts to the real path.
+
+**Angular CRAP.** `crap_angular.js` writes `.metrics/crap.edn` from Istanbul
+`coverage-final.json` (Vitest's `json` coverage reporter) plus classic McCabe
+complexity from the TypeScript AST. Entries are keyed by file path and
+qualname (`Class.method`, `Class.prop` for signal/arrow properties, guards by
+const name). Anonymous callbacks fold into their entry; optional chaining and
+default parameters are not counted (ESLint's `complexity` counts them, so its
+numbers run higher). From the Angular project:
+
+```bash
+CI=true npx ng test --watch=false --coverage --coverage-reporters=json
+node path/to/uml_viewer/angular_language/crap_angular.js \
+  coverage/<project>/coverage-final.json src/app .metrics/crap.edn
+```
+
+The Angular specs in this repo need TypeScript: run `npm install` here once.
+
 Do not special-case languages in `policy` or `ir-generator`. Main picks the
 registered implementation for the policy's `:lang` and passes it in. The
 viewer opens source through `source/first-located`, which tries each

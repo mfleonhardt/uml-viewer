@@ -1,0 +1,8 @@
+{
+  "name": "uml-viewer-dev",
+  "private": true,
+  "description": "Dev-only: the TypeScript compiler the Angular reader's specs parse with. Angular projects supply their own.",
+  "devDependencies": {
+    "typescript": "5.9.3"
+  }
+}

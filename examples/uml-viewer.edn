@@ -11,6 +11,8 @@
   [:engine.compose :engine.layout] :association,
   [:engine.compose :engine.route] :association,
   [:main.ir-generator :cdk-language.graph-cdk] :association,
+  [:main.uml-viewer :angular-language.source-angular] :association,
+  [:main.ir-generator :angular-language.graph-angular] :association,
   [:adapters.core :adapters.sketch] :association,
   [:main :application] :association,
   [:main.uml-viewer :clojure-language.source-clojure] :association,
@@ -21,7 +23,13 @@
   [:main.ir-generator :python-language.graph-python] :association},
  :omit-edges [],
  :levels
- [[:domain :source :graph :clojure-language :python-language :cdk-language]
+ [[:domain
+   :source
+   :graph
+   :clojure-language
+   :python-language
+   :cdk-language
+   :angular-language]
   [:engine]
   [:application]
   [:adapters]
@@ -37,11 +45,13 @@
   :clojure-language
   :python-language
   :cdk-language
+  :angular-language
   :domain],
  :omit [],
  :edges
  [{:from :main.uml-viewer, :to :adapters.core, :kind :dependency}
   {:from :clojure-language.source-clojure, :to :source, :kind :implements}
+  {:from :angular-language.source-angular, :to :source, :kind :implements}
   {:from :main.uml-viewer, :to :source, :kind :dependency}
   {:from :adapters.draw, :to :application.document, :kind :dependency}
   {:from :application.document, :to :domain.hierarchy, :kind :dependency}
@@ -78,6 +88,7 @@
   {:from :main.ir-generator, :to :cdk-language.graph-cdk, :kind :dependency}
   {:from :adapters.sketch, :to :quil, :kind :dependency}
   {:from :engine.compose, :to :domain.geom, :kind :dependency}
+  {:from :main.uml-viewer, :to :angular-language.source-angular, :kind :dependency}
   {:from :engine.route, :to :engine.layout, :kind :dependency}
   {:from :domain.hierarchy, :to :domain.policy, :kind :dependency}
   {:from :adapters.draw, :to :domain.hierarchy, :kind :dependency}
@@ -85,6 +96,8 @@
   {:from :application.ir-generator, :to :graph, :kind :dependency}
   {:from :engine.compose, :to :engine.hit, :kind :dependency}
   {:from :application.detail, :to :engine.hit, :kind :dependency}
+  {:from :angular-language.graph-angular, :to :graph, :kind :implements}
+  {:from :main.ir-generator, :to :angular-language.graph-angular, :kind :dependency}
   {:from :adapters.sketch, :to :adapters.source-window, :kind :dependency}
   {:from :adapters.sketch, :to :domain.mailbox, :kind :dependency}
   {:from :adapters.core, :to :adapters.sketch, :kind :dependency}
@@ -135,6 +148,16 @@
    :ns "uml-viewer.adapters.source-window",
    :stereotype nil,
    :level 3}
+  {:id :angular-language.graph-angular,
+   :name "GraphAngular",
+   :ns "uml-viewer.angular-language.graph-angular",
+   :stereotype nil,
+   :level 0}
+  {:id :angular-language.source-angular,
+   :name "SourceAngular",
+   :ns "uml-viewer.angular-language.source-angular",
+   :stereotype nil,
+   :level 0}
   {:id :application.detail,
    :name "Detail",
    :ns "uml-viewer.application.detail",
