@@ -678,6 +678,7 @@
     :field ink
     :rel ink
     :stats ink
+    :op ink
     muted))
 
 (defn- count-ink [n]
@@ -731,7 +732,7 @@
   (when (:text row)
     (let [x detail/pad
           y (:y row)
-          cols (detail/column-layout)
+          cols (when (= :stats (:kind row)) (detail/column-layout))
           name-right (if (seq cols)
                        (- (:left (first cols)) detail/col-gap)
                        (- detail/width detail/pad))]

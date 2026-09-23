@@ -149,19 +149,38 @@
       (update :y + 12)
       (emit :heading label {})))
 
+(defn- op-label [op]
+  (str (if (:private op) "- " "+ ") (:text op)))
+
 (defn- emit-table [acc c]
   (let [acc (update acc :y + 12)
         acc (emit acc :group-header "" {})
         acc (emit acc :col-header "" {})
         acc (emit acc :stats (:name c) (format-cells (class-metrics c)))]
     (reduce (fn [acc op]
-              (let [label (str (if (:private op) "- " "+ ") (:text op))]
-                (emit acc :stats label
-                      (assoc (format-cells (op-metrics op))
-                        :private (boolean (:private op))
-                        :op-name (:name op)))))
+              (emit acc :stats (op-label op)
+                    (assoc (format-cells (op-metrics op))
+                      :private (boolean (:private op))
+                      :op-name (:name op))))
             acc
             (:ops c))))
+
+(defn- metric? [m]
+  (boolean (some some? ((juxt :crap-mu :cc :coverage :killed :survived :uncovered :sites) m))))
+
+(defn- any-metrics?
+  "True when the class or any of its ops carries a CRAP or mutation number."
+  [c]
+  (boolean (some metric? (cons (class-metrics c) (map op-metrics (:ops c))))))
+
+(defn- emit-ops
+  "Ops as plain rows under a heading: no metric columns to leave blank."
+  [acc c]
+  (reduce (fn [acc op]
+            (emit acc :op (op-label op)
+                  {:private (boolean (:private op)) :op-name (:name op)}))
+          (heading acc "Operations")
+          (:ops c)))
 
 (defn rows
   "Laid-out lines for `model`. Y is in content space (scroll separately)."
@@ -189,14 +208,19 @@
           acc (if-let [s (layout/format-crap (:crap c))]
                 (emit acc :crap s {})
                 acc)
-          acc (if (or (seq (:ops c))
-                      (crap-mu (:crap c))
-                      (:coverage c)
-                      (:cc c)
-                      (:killed c)
-                      (:survived c))
+          acc (cond
+                (and (seq (:ops c)) (not (any-metrics? c)))
+                (emit-ops acc c)
+
+                (or (seq (:ops c))
+                    (crap-mu (:crap c))
+                    (:coverage c)
+                    (:cc c)
+                    (:killed c)
+                    (:survived c))
                 (emit-table acc c)
-                acc)
+
+                :else acc)
           acc (if (seq (:fields c))
                 (reduce (fn [acc f]
                           (emit acc :field (:text f) {}))

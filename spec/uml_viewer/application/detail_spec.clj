@@ -160,4 +160,32 @@
   (it "does not treat a field row as a relationship hit"
     (let [rows (detail/rows (detail/model (scene) :a))
           name-row (first (filter #(= :name (:kind %)) rows))]
-      (should-be-nil (detail/rel-at rows (:y name-row))))))
+      (should-be-nil (detail/rel-at rows (:y name-row)))))
+
+  (it "lists ops without metric columns when nothing on the card has a metric"
+    (let [s (compose/compile-diagram
+              (ir/normalize
+                {:packages
+                 [{:id :p :label "P"
+                   :classes [{:id :r :name "Role"
+                              :fields [{:text "assumed by: lambda"}]
+                              :ops [{:name "read" :text "Table  dynamodb: GetItem"}
+                                    {:name "hid" :text "hid" :private true}]}]}]}))
+          rows (detail/rows (detail/model s :r))
+          kinds (set (map :kind rows))
+          read-op (first (filter #(= "read" (:op-name %)) rows))
+          hid (first (filter #(= "hid" (:op-name %)) rows))]
+      (should-not (some #{:group-header :col-header :stats} kinds))
+      (should (some #(and (= :heading (:kind %)) (= "Operations" (:text %))) rows))
+      (should= :op (:kind read-op))
+      (should= "+ Table  dynamodb: GetItem" (:text read-op))
+      (should-be-nil (:mut-note read-op))
+      (should= "- hid" (:text hid))
+      (should (:private hid))
+      (should= "read" (detail/member-at rows (+ (:y read-op) 1)))
+      (should (some #(= "assumed by: lambda" (:text %)) rows))))
+
+  (it "keeps the metric table when any op has a metric"
+    (let [rows (detail/rows (detail/model (scene) :a))]
+      (should (some #(= :col-header (:kind %)) rows))
+      (should-not (some #(= :op (:kind %)) rows)))))
