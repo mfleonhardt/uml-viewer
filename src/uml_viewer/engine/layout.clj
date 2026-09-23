@@ -89,6 +89,23 @@
   (when p
     (format "%.0f%%" (* 100.0 p))))
 
+(defn fit-tail
+  "`text` unchanged when `width-of` says it fits in `max-w`. Otherwise keep a
+  leading `+ ` / `- ` marker, then `…` and the longest tail that fits, so a
+  long dotted name keeps the part that identifies it (`…raise._is_local`).
+  Boxed text would drop an unbreakable word that is too wide."
+  [text max-w width-of]
+  (if (<= (width-of text) max-w)
+    text
+    (let [[marker body] (if (re-find #"^[+-] " text)
+                          [(subs text 0 2) (subs text 2)]
+                          ["" text])]
+      (or (some (fn [i]
+                  (let [s (str marker "…" (subs body i))]
+                    (when (<= (width-of s) max-w) s)))
+                (range 1 (count body)))
+          (str marker "…")))))
+
 (defn format-mutants [killed survived]
   (when (or killed survived)
     (format "%d killed / %d survived"
