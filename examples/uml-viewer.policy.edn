@@ -5,8 +5,8 @@
  :out "examples/uml-viewer.edn"
  :hierarchical true
  :foreign [quil javax.swing]
- :order [main adapters application engine source graph clojure-language domain]
- :levels [[domain source graph clojure-language]
+ :order [main adapters application engine source graph clojure-language python-language domain]
+ :levels [[domain source graph clojure-language python-language]
           [engine]
           [application]
           [adapters]
@@ -22,4 +22,7 @@
               [:main.uml-viewer :adapters.core] :association
               [:main.uml-viewer :clojure-language.source-clojure] :association
               [:main.ir-generator :application.ir-generator] :association
-              [:main.ir-generator :clojure-language.graph-clojure] :association}}
+              [:main.ir-generator :clojure-language.graph-clojure] :association
+              [:main :python-language] :association
+              [:main.uml-viewer :python-language.source-python] :association
+              [:main.ir-generator :python-language.graph-python] :association}}
